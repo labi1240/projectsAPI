@@ -25,6 +25,8 @@ async def retrieve_project(name: str):
     collection = get_database()[COLLECTION_NAME]
     # Use a case-insensitive search
     project = await collection.find_one({"name": {"$regex": f"^{name}$", "$options": "i"}})
+    if project:
+        project['slug'] = project['name'].replace(' ', '-')
     return project
 
 async def retrieve_projects(
@@ -52,5 +54,6 @@ async def retrieve_projects(
     }
     projects = []
     async for project in collection.find(filter_params):
+        project['slug'] = project['name'].replace(' ', '-')
         projects.append(project)
     return projects
