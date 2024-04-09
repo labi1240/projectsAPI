@@ -66,6 +66,7 @@ class ProjectModel(BaseModel):
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
     v: Optional[int] = Field(None, alias="__v")
+    slug: Optional[str] = None
 
     class Config:
         allow_population_by_field_name = True
