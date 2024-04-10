@@ -1,14 +1,16 @@
 from pydantic import BaseModel, Field, HttpUrl, validator
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 from bson import ObjectId
+from slugify import slugify
+
+IntOrFloat = Union[int, float]
 
 class ImageModel(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-    ImageName: str
-    ImageDescription: str
-    ImagePath: HttpUrl
-
+    ImageName: Optional[str]
+    ImageDescription: Optional[str]
+    ImagePath: Optional[HttpUrl] = None
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -16,12 +18,12 @@ class ImageModel(BaseModel):
 
 class UnitModel(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    br: Optional[IntOrFloat] = None  # Accept both int and float, convert float to int
     status: Optional[str] = None
     statusName: Optional[str] = None
     colType: Optional[str] = None
     unitType: Optional[str] = None
     unitName: Optional[str] = None
-    br: Optional[int] = None  # Bedrooms
     ba: Optional[int] = None  # Bathrooms
     sqft: Optional[int] = None  # Square footage
     lotBalc: Optional[str] = None
@@ -31,6 +33,10 @@ class UnitModel(BaseModel):
     unitStyle: Optional[str] = None
     url: Optional[HttpUrl] = None
     image: Optional[HttpUrl] = None
+
+    @validator('br', pre=True, always=True)
+    def convert_br_to_int(cls, v):
+        return int(v) if isinstance(v, float) else v
 
     @validator('url', 'image', pre=True, always=True)
     def validate_urls(cls, v):
@@ -46,6 +52,8 @@ class UnitModel(BaseModel):
 class ProjectModel(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
     address: Optional[str] = None
+    name: Optional[str] = None
+    slug: Optional[str] = None  # Made optional to handle None values
     bedrooms: Optional[str] = None
     buildingType: Optional[str] = None
     city_name: Optional[str] = None
@@ -54,7 +62,6 @@ class ProjectModel(BaseModel):
     estimatedCompletion: Optional[str] = None
     images: List[ImageModel] = []
     incentives: Optional[str] = None
-    name: Optional[str] = None
     price: Optional[str] = None
     province: Optional[str] = None
     sizeSqFt: Optional[str] = None
@@ -65,7 +72,13 @@ class ProjectModel(BaseModel):
     units: List[UnitModel] = []
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
-    v: Optional[int] = Field(None, alias="__v")
+    # Include the rest of the fields...
+
+    @validator('slug', always=True, pre=True)
+    def set_slug(cls, v, values):
+        if 'name' in values:  
+            return slugify(values['name'])
+        return None  # Handle the absence of 'name'
 
     class Config:
         allow_population_by_field_name = True
