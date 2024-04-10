@@ -72,13 +72,7 @@ class ProjectModel(BaseModel):
     units: List[UnitModel] = []
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
-    # Include the rest of the fields...
-
-    @validator('slug', always=True, pre=True)
-    def set_slug(cls, v, values):
-        if 'name' in values:  
-            return slugify(values['name'])
-        return None  # Handle the absence of 'name'
+    v: Optional[int] = Field(None, alias="__v")
 
     class Config:
         allow_population_by_field_name = True

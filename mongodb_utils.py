@@ -15,6 +15,19 @@ async def connect_to_mongo():
 async def close_mongo_connection():
     client.close()
 
+async def retrieve_projects():
+    collection = get_database()[COLLECTION_NAME]
+    projects = []
+    async for project in collection.find():
+        projects.append(project)
+    return projects
+
+async def retrieve_project(name: str):
+    collection = get_database()[COLLECTION_NAME]
+    # Use a case-insensitive search
+    project = await collection.find_one({"name": {"$regex": f"^{name}$", "$options": "i"}})
+    return project
+
 async def retrieve_projects(
     incentives: Optional[str] = None,
     name: Optional[str] = None,
